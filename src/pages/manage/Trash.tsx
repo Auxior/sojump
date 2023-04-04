@@ -1,9 +1,11 @@
 import React, { FC, useState } from 'react'
 import { useTitle } from 'ahooks'
-import { Typography, Empty, Table, Tag } from 'antd'
+import { Typography, Empty, Table, Tag, Button, Space, Modal } from 'antd'
+import { ExclamationCircleOutlined } from '@ant-design/icons'
 import styles from './common.module.scss'
 
 const { Title } = Typography
+const { confirm } = Modal
 
 const rawQuestionList = [
   {
@@ -37,6 +39,18 @@ const Trash: FC = () => {
 
   const [questionList, setQuestionList] = useState(rawQuestionList)
 
+  // 记录选中的 id
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+
+  function del() {
+    confirm({
+      title: '确认彻底删除该问卷？',
+      icon: <ExclamationCircleOutlined />,
+      content: '删除以后不可以找回',
+      onOk: () => alert(`删除 ${JSON.stringify(selectedIds)}`),
+    })
+  }
+
   const tableColumns = [
     {
       title: '标题',
@@ -59,6 +73,33 @@ const Trash: FC = () => {
     },
   ]
 
+  const TableElem = (
+    <>
+      <div style={{ marginBottom: '16px' }}>
+        <Space>
+          <Button type="primary" disabled={selectedIds.length === 0}>
+            恢复
+          </Button>
+          <Button danger disabled={selectedIds.length === 0} onClick={del}>
+            彻底删除
+          </Button>
+        </Space>
+      </div>
+      <Table
+        dataSource={questionList}
+        columns={tableColumns}
+        pagination={false}
+        rowKey={q => q._id}
+        rowSelection={{
+          type: 'checkbox',
+          onChange: selectedRowKeys => {
+            setSelectedIds(selectedRowKeys as string[])
+          },
+        }}
+      />
+    </>
+  )
+
   return (
     <>
       <div className={styles.header}>
@@ -69,9 +110,7 @@ const Trash: FC = () => {
       </div>
       <div className={styles.content}>
         {questionList.length === 0 && <Empty description="暂无数据" />}
-        {questionList.length > 0 && (
-          <Table dataSource={questionList} columns={tableColumns} pagination={false} />
-        )}
+        {questionList.length > 0 && TableElem}
       </div>
     </>
   )
